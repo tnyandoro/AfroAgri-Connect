@@ -54,10 +54,10 @@ export const TransportPage: React.FC<TransportPageProps> = ({ onOpenAuth }) => {
         is_available: true,
         rating: 4.4,
         total_deliveries: 423,
-        location_address: 'Thika, Kenya',
+        location_address: 'Thika, Zimbabwe',
       },
       {
-        company_name: 'Heavy Haul Kenya',
+        company_name: 'Heavy Haul Zimbabwe',
         owner_name: 'Patrick Omondi',
         email: 'patrick@heavyhaul.com',
         phone: '+254 712 345 678',
@@ -342,7 +342,7 @@ export const TransportPage: React.FC<TransportPageProps> = ({ onOpenAuth }) => {
         <div className="mt-12 bg-gradient-to-r from-orange-500 to-orange-600 rounded-2xl p-8 text-center text-white">
           <h2 className="text-2xl font-bold mb-2">Become a Transport Partner</h2>
           <p className="text-orange-100 mb-6 max-w-xl mx-auto">
-            Have a truck or van? Join our network and start earning by delivering fresh produce across Kenya.
+            Have a truck or van? Join our network and start earning by delivering fresh produce across Zimbabwe.
           </p>
           <button
             onClick={() => onOpenAuth('transporter')}

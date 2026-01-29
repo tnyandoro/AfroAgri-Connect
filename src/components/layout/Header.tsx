@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '@/context/AppContext';
+import logo from '../../assets/logo.png';
 import {
-  LeafIcon,
   CartIcon,
   UserIcon,
   MenuIcon,
@@ -52,18 +52,17 @@ export const Header: React.FC<HeaderProps> = ({ onOpenCart, onOpenAuth, onOpenLo
   return (
     <header className="bg-white border-b border-gray-100 sticky top-0 z-40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center justify-between h-36">
           {/* Logo */}
           <div
             className="flex items-center gap-2 cursor-pointer"
             onClick={() => onNavigate('home')}
           >
-            <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-green-700 rounded-xl flex items-center justify-center">
-              <LeafIcon className="text-white" size={24} />
-            </div>
-            <span className="text-xl font-bold text-gray-900">
-              Farm<span className="text-green-600">Connect</span>
-            </span>
+            <img
+              src={logo}
+              alt="FarmConnect"
+              className="h-[360px] w-auto object-contain"
+            />
           </div>
 
           {/* Desktop Navigation */}
