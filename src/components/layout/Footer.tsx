@@ -119,13 +119,13 @@ export const Footer: React.FC = () => {
               <li className="flex items-center gap-3">
                 <PhoneIcon className="text-green-500" size={18} />
                 <a href="tel:+254700000000" className="text-gray-400 hover:text-green-500 transition-colors">
-                  +254 700 000 000
+                  +263 700 000 000
                 </a>
               </li>
               <li className="flex items-center gap-3">
                 <MailIcon className="text-green-500" size={18} />
                 <a href="mailto:hello@farmconnect.co.ke" className="text-gray-400 hover:text-green-500 transition-colors">
-                  hello@farmconnect.co.ke
+                  hello@farmconnect.co.zw
                 </a>
               </li>
             </ul>
