@@ -113,7 +113,7 @@ export const Footer: React.FC = () => {
                 <MapPinIcon className="text-green-500 mt-0.5" size={18} />
                 <span className="text-gray-400">
                   123 Agriculture House,<br />
-                  Nairobi, Kenya
+                  Harare, Zimbabwe
                 </span>
               </li>
               <li className="flex items-center gap-3">

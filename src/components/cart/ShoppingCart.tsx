@@ -67,7 +67,7 @@ export const ShoppingCart: React.FC<ShoppingCartProps> = ({ onCheckout, onClose 
                     {item.produce.farmer?.farm_name || 'Local Farm'}
                   </p>
                   <p className="text-sm text-green-600 font-medium">
-                    KES {item.produce.price_per_unit.toFixed(2)}/{item.produce.unit}
+                    USD {item.produce.price_per_unit.toFixed(2)}/{item.produce.unit}
                   </p>
                 </div>
                 <button
@@ -100,7 +100,7 @@ export const ShoppingCart: React.FC<ShoppingCartProps> = ({ onCheckout, onClose 
                   </button>
                 </div>
                 <span className="font-semibold text-gray-900">
-                  KES {(item.produce.price_per_unit * item.quantity).toFixed(2)}
+                  USD {(item.produce.price_per_unit * item.quantity).toFixed(2)}
                 </span>
               </div>
             </div>
@@ -113,7 +113,7 @@ export const ShoppingCart: React.FC<ShoppingCartProps> = ({ onCheckout, onClose 
         <div className="flex items-center justify-between mb-4">
           <span className="text-gray-600">Subtotal</span>
           <span className="text-xl font-bold text-gray-900">
-            KES {cartTotal.toFixed(2)}
+            USD {cartTotal.toFixed(2)}
           </span>
         </div>
         <p className="text-xs text-gray-500 mb-4">
