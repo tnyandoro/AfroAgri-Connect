@@ -24,7 +24,7 @@ export const MarketDashboard: React.FC<MarketDashboardProps> = ({ onNavigate }) 
 
   const stats = [
     { label: 'Total Orders', value: '32', icon: PackageIcon, color: 'bg-blue-500' },
-    { label: 'Total Spent', value: 'KES 485,000', icon: DollarIcon, color: 'bg-green-500' },
+    { label: 'Total Spent', value: 'USD 485,000', icon: DollarIcon, color: 'bg-green-500' },
     { label: 'Active Deliveries', value: '3', icon: TruckIcon, color: 'bg-orange-500' },
     { label: 'Saved Farms', value: '8', icon: StarIcon, color: 'bg-purple-500' },
   ];
@@ -85,7 +85,7 @@ export const MarketDashboard: React.FC<MarketDashboardProps> = ({ onNavigate }) 
               </div>
               <div>
                 <p className="font-medium">You have {cart.length} items in your cart</p>
-                <p className="text-green-100 text-sm">Total: KES {cartTotal.toFixed(2)}</p>
+                <p className="text-green-100 text-sm">Total: USD {cartTotal.toFixed(2)}</p>
               </div>
             </div>
             <button
@@ -161,7 +161,7 @@ export const MarketDashboard: React.FC<MarketDashboardProps> = ({ onNavigate }) 
                     <p className="text-sm text-gray-600 mb-1">{order.farm}</p>
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-gray-500">{order.items} items</span>
-                      <span className="font-medium text-green-600">KES {order.total.toLocaleString()}</span>
+                      <span className="font-medium text-green-600">USD {order.total.toLocaleString()}</span>
                     </div>
                   </div>
                 ))}
@@ -225,7 +225,7 @@ export const MarketDashboard: React.FC<MarketDashboardProps> = ({ onNavigate }) 
                     <td className="px-6 py-4 font-medium text-gray-900">{order.id}</td>
                     <td className="px-6 py-4 text-gray-600">{order.farm}</td>
                     <td className="px-6 py-4 text-gray-600">{order.items}</td>
-                    <td className="px-6 py-4 font-medium text-green-600">KES {order.total.toLocaleString()}</td>
+                    <td className="px-6 py-4 font-medium text-green-600">USD {order.total.toLocaleString()}</td>
                     <td className="px-6 py-4">
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadge(order.status)}`}>
                         {order.status.replace('_', ' ')}

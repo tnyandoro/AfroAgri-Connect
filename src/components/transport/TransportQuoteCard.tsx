@@ -48,7 +48,7 @@ export const TransportQuoteCard: React.FC<TransportQuoteCardProps> = ({
             </div>
             <div className="text-right">
               <p className="text-2xl font-bold text-orange-600">
-                KES {quote.total_cost.toFixed(0)}
+                USD {quote.total_cost.toFixed(0)}
               </p>
               <p className="text-xs text-gray-500">Total cost</p>
             </div>
@@ -80,16 +80,16 @@ export const TransportQuoteCard: React.FC<TransportQuoteCardProps> = ({
             <div className="grid grid-cols-3 gap-2 text-xs">
               <div>
                 <p className="text-gray-500">Base Rate</p>
-                <p className="font-medium">KES {quote.base_cost.toFixed(0)}</p>
+                <p className="font-medium">USD {quote.base_cost.toFixed(0)}</p>
               </div>
               <div>
                 <p className="text-gray-500">Distance ({quote.distance_km}km)</p>
-                <p className="font-medium">KES {quote.distance_cost.toFixed(0)}</p>
+                <p className="font-medium">USD {quote.distance_cost.toFixed(0)}</p>
               </div>
               {quote.refrigeration_cost > 0 && (
                 <div>
                   <p className="text-gray-500">Refrigeration</p>
-                  <p className="font-medium">KES {quote.refrigeration_cost.toFixed(0)}</p>
+                  <p className="font-medium">USD {quote.refrigeration_cost.toFixed(0)}</p>
                 </div>
               )}
             </div>

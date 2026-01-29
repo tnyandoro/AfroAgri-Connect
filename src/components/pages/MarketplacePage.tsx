@@ -174,7 +174,7 @@ export const MarketplacePage: React.FC = () => {
               <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Price Range (KES)
+                    Price Range (USD)
                   </label>
                   <div className="flex items-center gap-2">
                     <input

@@ -367,7 +367,7 @@ export const TransporterRegistration: React.FC<TransporterRegistrationProps> = (
               Set Your Rates
             </h3>
             <p className="text-sm text-gray-600 mb-4">
-              Set competitive rates to attract more customers. Prices are in KES.
+              Set competitive rates to attract more customers. Prices are in USD.
             </p>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -375,7 +375,7 @@ export const TransporterRegistration: React.FC<TransporterRegistrationProps> = (
               </label>
               <div className="relative">
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">
-                  KES
+                  USD
                 </span>
                 <input
                   type="number"
@@ -397,7 +397,7 @@ export const TransporterRegistration: React.FC<TransporterRegistrationProps> = (
               </label>
               <div className="relative">
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">
-                  KES
+                  USD
                 </span>
                 <input
                   type="number"
@@ -420,7 +420,7 @@ export const TransporterRegistration: React.FC<TransporterRegistrationProps> = (
                 </label>
                 <div className="relative">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">
-                    KES
+                    USD
                   </span>
                   <input
                     type="number"
@@ -443,7 +443,7 @@ export const TransporterRegistration: React.FC<TransporterRegistrationProps> = (
                 For a 50km trip{formData.has_refrigeration ? ' with refrigeration' : ''}:
               </p>
               <p className="text-lg font-bold text-orange-600 mt-1">
-                KES{' '}
+                USD{' '}
                 {(
                   formData.base_rate +
                   formData.per_km_rate * 50 +

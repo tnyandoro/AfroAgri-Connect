@@ -394,7 +394,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ onComplete, onBack }
                     {item.produce.name} x {item.quantity} {item.produce.unit}
                   </span>
                   <span className="font-medium">
-                    KES {(item.produce.price_per_unit * item.quantity).toFixed(2)}
+                    USD {(item.produce.price_per_unit * item.quantity).toFixed(2)}
                   </span>
                 </div>
               ))}
@@ -438,7 +438,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ onComplete, onBack }
                 </p>
               </div>
               <p className="text-lg font-bold text-orange-600">
-                KES {selectedQuote.total_cost.toFixed(0)}
+                USD {selectedQuote.total_cost.toFixed(0)}
               </p>
             </div>
           </div>
@@ -447,16 +447,16 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ onComplete, onBack }
           <div className="border-t border-gray-200 pt-4">
             <div className="flex items-center justify-between text-sm mb-2">
               <span className="text-gray-600">Subtotal</span>
-              <span>KES {cartTotal.toFixed(2)}</span>
+              <span>USD {cartTotal.toFixed(2)}</span>
             </div>
             <div className="flex items-center justify-between text-sm mb-2">
               <span className="text-gray-600">Transport</span>
-              <span>KES {selectedQuote.total_cost.toFixed(2)}</span>
+              <span>USD {selectedQuote.total_cost.toFixed(2)}</span>
             </div>
             <div className="flex items-center justify-between text-lg font-bold">
               <span>Total</span>
               <span className="text-green-600">
-                KES {(cartTotal + selectedQuote.total_cost).toFixed(2)}
+                USD {(cartTotal + selectedQuote.total_cost).toFixed(2)}
               </span>
             </div>
           </div>

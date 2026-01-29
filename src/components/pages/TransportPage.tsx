@@ -268,20 +268,20 @@ export const TransportPage: React.FC<TransportPageProps> = ({ onOpenAuth }) => {
                     <div>
                       <p className="text-xs text-gray-500">Base Rate</p>
                       <p className="font-semibold text-gray-900">
-                        KES {transporter.base_rate}
+                        USD {transporter.base_rate}
                       </p>
                     </div>
                     <div>
                       <p className="text-xs text-gray-500">Per KM</p>
                       <p className="font-semibold text-gray-900">
-                        KES {transporter.per_km_rate}
+                        USD {transporter.per_km_rate}
                       </p>
                     </div>
                     {transporter.has_refrigeration && (
                       <div>
                         <p className="text-xs text-gray-500">Refrigeration</p>
                         <p className="font-semibold text-gray-900">
-                          +KES {transporter.refrigeration_premium}
+                          +USD {transporter.refrigeration_premium}
                         </p>
                       </div>
                     )}

@@ -20,7 +20,7 @@ export const TransporterDashboard: React.FC = () => {
 
   const stats = [
     { label: 'Total Deliveries', value: '156', icon: PackageIcon, color: 'bg-orange-500' },
-    { label: 'This Month', value: 'KES 78,500', icon: DollarIcon, color: 'bg-green-500' },
+    { label: 'This Month', value: 'USD 78,500', icon: DollarIcon, color: 'bg-green-500' },
     { label: 'Active Jobs', value: '2', icon: TruckIcon, color: 'bg-blue-500' },
     { label: 'Rating', value: '4.8', icon: StarIcon, color: 'bg-yellow-500' },
   ];
@@ -151,7 +151,7 @@ export const TransporterDashboard: React.FC = () => {
               <DollarIcon className="text-green-500" size={24} />
               <div>
                 <p className="text-sm text-gray-500">Rate</p>
-                <p className="font-medium">KES {transporter?.per_km_rate || 2.5}/km</p>
+                <p className="font-medium">USD {transporter?.per_km_rate || 2.5}/km</p>
               </div>
             </div>
           </div>
@@ -196,7 +196,7 @@ export const TransporterDashboard: React.FC = () => {
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-2xl font-bold text-green-600">KES {job.estimatedPay}</p>
+                    <p className="text-2xl font-bold text-green-600">USD {job.estimatedPay}</p>
                     <p className="text-sm text-gray-500">{job.distance} km</p>
                   </div>
                 </div>
@@ -271,7 +271,7 @@ export const TransporterDashboard: React.FC = () => {
                     <td className="px-6 py-4 font-medium text-gray-900">{job.id}</td>
                     <td className="px-6 py-4 text-gray-600">{job.route}</td>
                     <td className="px-6 py-4 text-gray-600">{job.distance} km</td>
-                    <td className="px-6 py-4 font-medium text-green-600">KES {job.earnings}</td>
+                    <td className="px-6 py-4 font-medium text-green-600">USD {job.earnings}</td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-1">
                         <StarIcon className="text-yellow-400" size={16} />

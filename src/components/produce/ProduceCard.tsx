@@ -78,7 +78,7 @@ export const ProduceCard: React.FC<ProduceCardProps> = ({ produce, onViewDetails
         <div className="flex items-center justify-between mb-3">
           <div>
             <span className="text-2xl font-bold text-green-600">
-              KES {produce.price_per_unit.toFixed(2)}
+              USD {produce.price_per_unit.toFixed(2)}
             </span>
             <span className="text-sm text-gray-500">/{produce.unit}</span>
           </div>
@@ -122,7 +122,7 @@ export const ProduceCard: React.FC<ProduceCardProps> = ({ produce, onViewDetails
                   : 'bg-green-600 hover:bg-green-700 text-white'
               }`}
             >
-              {isAdding ? 'Added!' : `Add to Cart - KES ${(produce.price_per_unit * quantity).toFixed(2)}`}
+              {isAdding ? 'Added!' : `Add to Cart - USD ${(produce.price_per_unit * quantity).toFixed(2)}`}
             </button>
           </>
         )}
