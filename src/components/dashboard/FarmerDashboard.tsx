@@ -181,45 +181,43 @@ export const FarmerDashboard: React.FC = () => {
 
     setIsSaving(true);
     try {
-      let imageUrl = editingListing?.image_url || undefined;
+      let imageUrl: string | null = editingListing?.image_url ?? null;
 
       if (imageFile) {
-        const fileExt = imageFile.name.split('.').pop();
+        const fileExt = imageFile.name.split('.').pop() || 'jpg';
         const fileName = `${farmer.id}/${Date.now()}.${fileExt}`;
         const { error: uploadError } = await supabase.storage
           .from('produce-images')
           .upload(fileName, imageFile, { upsert: true });
 
         if (uploadError) {
-          console.error('Error uploading image:', uploadError);
+          console.warn('Image upload failed, saving listing without image:', uploadError);
           toast({
-            title: 'Image upload failed',
-            description: uploadError.message,
+            title: 'Listing saved without image',
+            description: 'Image upload failed. You can edit the listing later to add a photo.',
+            variant: 'default',
           });
-          setIsSaving(false);
-          return;
+        } else {
+          const { data: publicUrlData } = supabase.storage
+            .from('produce-images')
+            .getPublicUrl(fileName);
+          imageUrl = publicUrlData?.publicUrl ?? null;
         }
-
-        const { data: publicUrlData } = supabase.storage
-          .from('produce-images')
-          .getPublicUrl(fileName);
-
-        imageUrl = publicUrlData?.publicUrl;
       }
 
       const payload = {
         farmer_id: farmer.id,
-        name: formValues.name,
-        description: formValues.description || null,
+        name: formValues.name.trim(),
+        description: (formValues.description?.trim() || null) as string | null,
         category_id: formValues.categoryId,
-        price_per_unit: Number(formValues.pricePerUnit) || 0,
+        price_per_unit: Math.max(0, Number(formValues.pricePerUnit) || 0),
         unit: formValues.unit,
-        quantity_available: Number(formValues.quantityAvailable) || 0,
+        quantity_available: Math.max(0, Number(formValues.quantityAvailable) || 0),
         minimum_order: 1,
-        is_organic: formValues.isOrganic,
+        is_organic: Boolean(formValues.isOrganic),
         is_seasonal: false,
         is_active: true,
-        image_url: imageUrl || null,
+        image_url: imageUrl,
       };
 
       if (editingListing) {
@@ -232,7 +230,12 @@ export const FarmerDashboard: React.FC = () => {
           .single();
 
         if (error) {
-          throw error;
+          toast({
+            title: 'Error updating listing',
+            description: error.message,
+            variant: 'destructive',
+          });
+          return;
         }
 
         setListings((prev) =>
@@ -253,7 +256,12 @@ export const FarmerDashboard: React.FC = () => {
           .single();
 
         if (error) {
-          throw error;
+          toast({
+            title: 'Error creating listing',
+            description: error.message,
+            variant: 'destructive',
+          });
+          return;
         }
 
         setListings((prev) => [data as ProduceListing, ...prev]);
@@ -267,10 +275,11 @@ export const FarmerDashboard: React.FC = () => {
       resetForm();
     } catch (err) {
       console.error('Error saving listing:', err);
+      const message = err instanceof Error ? err.message : 'Something went wrong. Check the console for details.';
       toast({
         title: 'Error saving listing',
-        description:
-          err instanceof Error ? err.message : 'Something went wrong.',
+        description: message,
+        variant: 'destructive',
       });
     } finally {
       setIsSaving(false);

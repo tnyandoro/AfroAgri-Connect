@@ -20,12 +20,39 @@ export interface SignInData {
   password: string;
 }
 
+// Build a clean row for insert: only defined values, empty string -> null for optional fields
+function cleanInsertRow<T extends Record<string, unknown>>(
+  row: T,
+  requiredKeys: (keyof T)[],
+  optionalKeys: (keyof T)[]
+): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const k of requiredKeys) {
+    const v = row[k];
+    if (v === undefined || v === null || v === '') {
+      out[k as string] = null;
+    } else {
+      out[k as string] = v;
+    }
+  }
+  for (const k of optionalKeys) {
+    if (!(k in row)) continue;
+    const v = row[k];
+    if (v === undefined || v === '') {
+      out[k as string] = null;
+    } else {
+      out[k as string] = v;
+    }
+  }
+  return out;
+}
+
 // Sign up a new user with email and password
 export async function signUp({ email, password, role, profileData }: SignUpData): Promise<{ user: AuthUser | null; error: string | null }> {
   try {
     // Create auth user
     const { data: authData, error: authError } = await supabase.auth.signUp({
-      email,
+      email: email.trim(),
       password,
       options: {
         data: {
@@ -47,22 +74,31 @@ export async function signUp({ email, password, role, profileData }: SignUpData)
     const authId = authData.user.id;
 
     if (role === 'farmer') {
+      const row = cleanInsertRow(
+        { ...profileData, email: email.trim(), auth_id: authId } as Record<string, unknown>,
+        ['name', 'email', 'auth_id', 'farm_name'],
+        ['phone', 'farm_size', 'location_address', 'certifications', 'description']
+      );
       const { data, error } = await supabase
         .from('farmers')
-        .insert([{ ...profileData, email, auth_id: authId }])
+        .insert([row])
         .select()
         .single();
 
       if (error) {
-        // Rollback: delete auth user if profile creation fails
         await supabase.auth.admin?.deleteUser(authId);
         return { user: null, error: error.message };
       }
       profile = data as Farmer;
     } else if (role === 'market') {
+      const row = cleanInsertRow(
+        { ...profileData, email: email.trim(), auth_id: authId } as Record<string, unknown>,
+        ['business_name', 'business_type', 'email', 'auth_id'],
+        ['phone', 'contact_person', 'location_address', 'delivery_preferences', 'order_volume', 'description']
+      );
       const { data, error } = await supabase
         .from('markets')
-        .insert([{ ...profileData, email, auth_id: authId }])
+        .insert([row])
         .select()
         .single();
 
@@ -71,9 +107,21 @@ export async function signUp({ email, password, role, profileData }: SignUpData)
       }
       profile = data as Market;
     } else if (role === 'transporter') {
+      const row = cleanInsertRow(
+        {
+          ...profileData,
+          email: email.trim(),
+          auth_id: authId,
+          is_available: (profileData as Record<string, unknown>).is_available ?? true,
+          rating: (profileData as Record<string, unknown>).rating ?? 0,
+          total_deliveries: (profileData as Record<string, unknown>).total_deliveries ?? 0,
+        } as Record<string, unknown>,
+        ['company_name', 'owner_name', 'email', 'auth_id', 'vehicle_type', 'has_refrigeration', 'base_rate', 'per_km_rate', 'refrigeration_premium', 'is_available', 'rating', 'total_deliveries'],
+        ['phone', 'vehicle_capacity', 'license_plate', 'insurance_number', 'location_address']
+      );
       const { data, error } = await supabase
         .from('transporters')
-        .insert([{ ...profileData, email, auth_id: authId }])
+        .insert([row])
         .select()
         .single();
 
@@ -92,8 +140,14 @@ export async function signUp({ email, password, role, profileData }: SignUpData)
       },
       error: null,
     };
-  } catch (err: any) {
-    return { user: null, error: err.message || 'An unexpected error occurred' };
+  } catch (err: unknown) {
+    const errorMessage =
+      err instanceof Error
+        ? err.message
+        : typeof err === 'object' && err !== null && 'message' in err
+        ? String((err as { message?: unknown }).message)
+        : 'An unexpected error occurred';
+    return { user: null, error: errorMessage };
   }
 }
 
@@ -126,7 +180,7 @@ export async function signIn({ email, password }: SignInData): Promise<{ user: A
       .from('farmers')
       .select('*')
       .eq('auth_id', authId)
-      .single();
+      .maybeSingle();
 
     if (farmerData) {
       profile = farmerData as Farmer;
@@ -137,7 +191,7 @@ export async function signIn({ email, password }: SignInData): Promise<{ user: A
         .from('markets')
         .select('*')
         .eq('auth_id', authId)
-        .single();
+        .maybeSingle();
 
       if (marketData) {
         profile = marketData as Market;
@@ -148,7 +202,7 @@ export async function signIn({ email, password }: SignInData): Promise<{ user: A
           .from('transporters')
           .select('*')
           .eq('auth_id', authId)
-          .single();
+          .maybeSingle();
 
         if (transporterData) {
           profile = transporterData as Transporter;
@@ -163,7 +217,7 @@ export async function signIn({ email, password }: SignInData): Promise<{ user: A
         .from('farmers')
         .select('*')
         .eq('email', email)
-        .single();
+        .maybeSingle();
 
       if (farmerByEmail) {
         // Update with auth_id
@@ -178,7 +232,7 @@ export async function signIn({ email, password }: SignInData): Promise<{ user: A
           .from('markets')
           .select('*')
           .eq('email', email)
-          .single();
+          .maybeSingle();
 
         if (marketByEmail) {
           await supabase
@@ -192,7 +246,7 @@ export async function signIn({ email, password }: SignInData): Promise<{ user: A
             .from('transporters')
             .select('*')
             .eq('email', email)
-            .single();
+            .maybeSingle();
 
           if (transporterByEmail) {
             await supabase
@@ -215,8 +269,11 @@ export async function signIn({ email, password }: SignInData): Promise<{ user: A
       },
       error: null,
     };
-  } catch (err: any) {
-    return { user: null, error: err.message || 'An unexpected error occurred' };
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      return { user: null, error: err.message || 'An unexpected error occurred' };
+    }
+    return { user: null, error: 'An unexpected error occurred' };
   }
 }
 
@@ -228,8 +285,11 @@ export async function signOut(): Promise<{ error: string | null }> {
       return { error: error.message };
     }
     return { error: null };
-  } catch (err: any) {
-    return { error: err.message || 'An unexpected error occurred' };
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      return { error: err.message || 'An unexpected error occurred' };
+    }
+    return { error: 'An unexpected error occurred' };
   }
 }
 
@@ -244,8 +304,11 @@ export async function resetPassword(email: string): Promise<{ error: string | nu
       return { error: error.message };
     }
     return { error: null };
-  } catch (err: any) {
-    return { error: err.message || 'An unexpected error occurred' };
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      return { error: err.message || 'An unexpected error occurred' };
+    }
+    return { error: 'An unexpected error occurred' };
   }
 }
 
@@ -260,8 +323,11 @@ export async function updatePassword(newPassword: string): Promise<{ error: stri
       return { error: error.message };
     }
     return { error: null };
-  } catch (err: any) {
-    return { error: err.message || 'An unexpected error occurred' };
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      return { error: err.message || 'An unexpected error occurred' };
+    }
+    return { error: 'An unexpected error occurred' };
   }
 }
 
@@ -290,7 +356,7 @@ export async function getSession(): Promise<{ user: AuthUser | null; error: stri
       .from('farmers')
       .select('*')
       .eq('auth_id', authId)
-      .single();
+      .maybeSingle();
 
     if (farmerData) {
       profile = farmerData as Farmer;
@@ -301,7 +367,7 @@ export async function getSession(): Promise<{ user: AuthUser | null; error: stri
         .from('markets')
         .select('*')
         .eq('auth_id', authId)
-        .single();
+        .maybeSingle();
 
       if (marketData) {
         profile = marketData as Market;
@@ -312,7 +378,7 @@ export async function getSession(): Promise<{ user: AuthUser | null; error: stri
           .from('transporters')
           .select('*')
           .eq('auth_id', authId)
-          .single();
+          .maybeSingle();
 
         if (transporterData) {
           profile = transporterData as Transporter;
@@ -330,8 +396,11 @@ export async function getSession(): Promise<{ user: AuthUser | null; error: stri
       },
       error: null,
     };
-  } catch (err: any) {
-    return { user: null, error: err.message || 'An unexpected error occurred' };
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      return { user: null, error: err.message };
+    }
+    return { user: null, error: 'An unexpected error occurred' };
   }
 }
 
