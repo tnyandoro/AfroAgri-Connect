@@ -1,21 +1,25 @@
-import React, { useState } from 'react';
-import { AppProvider, useApp } from '@/context/AppContext';
-import { Header } from '@/components/layout/Header';
-import { Footer } from '@/components/layout/Footer';
-import { Modal } from '@/components/ui/Modal';
-import { FarmerRegistration } from '@/components/registration/FarmerRegistration';
-import { MarketRegistration } from '@/components/registration/MarketRegistration';
-import { TransporterRegistration } from '@/components/registration/TransporterRegistration';
-import { LoginModal } from '@/components/auth/LoginModal';
-import { HomePage } from '@/components/pages/HomePage';
-import { MarketplacePage } from '@/components/pages/MarketplacePage';
-import { FarmersPage } from '@/components/pages/FarmersPage';
-import { TransportPage } from '@/components/pages/TransportPage';
-import { FarmerDashboard } from '@/components/dashboard/FarmerDashboard';
-import { MarketDashboard } from '@/components/dashboard/MarketDashboard';
-import { TransporterDashboard } from '@/components/dashboard/TransporterDashboard';
-import { ShoppingCart } from '@/components/cart/ShoppingCart';
-import { CheckoutFlow } from '@/components/checkout/CheckoutFlow';
+import React, { useState } from "react";
+import { AppProvider, useApp } from "@/context/AppContext";
+import { Header } from "@/components/layout/Header";
+import { Footer } from "@/components/layout/Footer";
+import { Modal } from "@/components/ui/Modal";
+import { FarmerRegistration } from "@/components/registration/FarmerRegistration";
+import { MarketRegistration } from "@/components/registration/MarketRegistration";
+import { TransporterRegistration } from "@/components/registration/TransporterRegistration";
+import { LoginModal } from "@/components/auth/LoginModal";
+import { HomePage } from "@/components/pages/HomePage";
+import { MarketplacePage } from "@/components/pages/MarketplacePage";
+import { FarmersPage } from "@/components/pages/FarmersPage";
+import { TransportPage } from "@/components/pages/TransportPage";
+import { FarmerDashboard } from "@/components/dashboard/FarmerDashboard";
+import { MarketDashboard } from "@/components/dashboard/MarketDashboard";
+import { TransporterDashboard } from "@/components/dashboard/TransporterDashboard";
+import { ShoppingCart } from "@/components/cart/ShoppingCart";
+import { CheckoutFlow } from "@/components/checkout/CheckoutFlow";
+import MarketOrders from "@/pages/MarketOrders";
+import FarmerOrders from "@/pages/FarmerOrders";
+import TransporterOrders from "@/pages/TransporterOrders";
+import PaymentsPage from "@/pages/Payments";
 
 const AppContent: React.FC = () => {
   const {
@@ -36,7 +40,7 @@ const AppContent: React.FC = () => {
   const [showCart, setShowCart] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
 
-  const handleOpenAuth = (type: 'farmer' | 'market' | 'transporter') => {
+  const handleOpenAuth = (type: "farmer" | "market" | "transporter") => {
     setAuthModalType(type);
     setShowAuthModal(true);
     setShowLoginModal(false);
@@ -52,14 +56,14 @@ const AppContent: React.FC = () => {
     setShowAuthModal(false);
     setAuthModalType(null);
     setShowLoginModal(false);
-    setActiveView('dashboard');
+    setActiveView("dashboard");
   };
 
   const handleLoginSuccess = (user: any) => {
     setCurrentUser(user.profile);
     setUserRole(user.role);
     setShowLoginModal(false);
-    setActiveView('dashboard');
+    setActiveView("dashboard");
   };
 
   const handleSwitchToLogin = () => {
@@ -71,11 +75,11 @@ const AppContent: React.FC = () => {
   const handleSwitchToRegister = () => {
     setShowLoginModal(false);
     setShowAuthModal(true);
-    setAuthModalType('market'); // Default to market registration
+    setAuthModalType("market"); // Default to market registration
   };
 
   const handleNavigate = (view: string) => {
-    if (view === 'checkout') {
+    if (view === "checkout") {
       setShowCart(false);
       setShowCheckout(true);
     } else {
@@ -95,19 +99,30 @@ const AppContent: React.FC = () => {
 
   const handleCheckoutComplete = () => {
     setShowCheckout(false);
-    setActiveView('dashboard');
+    setActiveView("dashboard");
   };
+
+  // Detect Stripe checkout return (session_id) and redirect to the success page
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const sessionId = params.get("session_id") || params.get("sessionId");
+    if (!sessionId) return;
+
+    // Redirect to explicit success page which will fetch session/payment details
+    const newUrl = `/checkout/success?session_id=${encodeURIComponent(sessionId)}`;
+    window.location.replace(newUrl);
+  }, []);
 
   const getAuthModalTitle = () => {
     switch (authModalType) {
-      case 'farmer':
-        return 'Register as a Farmer';
-      case 'market':
-        return 'Register as a Buyer';
-      case 'transporter':
-        return 'Register as a Transporter';
+      case "farmer":
+        return "Register as a Farmer";
+      case "market":
+        return "Register as a Buyer";
+      case "transporter":
+        return "Register as a Transporter";
       default:
-        return 'Register';
+        return "Register";
     }
   };
 
@@ -147,29 +162,39 @@ const AppContent: React.FC = () => {
     }
 
     // Show dashboard based on user role
-    if (activeView === 'dashboard') {
+    if (activeView === "dashboard") {
       switch (userRole) {
-        case 'farmer':
+        case "farmer":
           return <FarmerDashboard />;
-        case 'market':
+        case "market":
           return <MarketDashboard onNavigate={handleNavigate} />;
-        case 'transporter':
+        case "transporter":
           return <TransporterDashboard />;
         default:
-          return <HomePage onOpenAuth={handleOpenAuth} onNavigate={handleNavigate} />;
+          return (
+            <HomePage onOpenAuth={handleOpenAuth} onNavigate={handleNavigate} />
+          );
       }
     }
 
+    // Orders pages (role-specific)
+    if (activeView === "orders-market") return <MarketOrders />;
+    if (activeView === "orders-farmer") return <FarmerOrders />;
+    if (activeView === "orders-transporter") return <TransporterOrders />;
+    if (activeView === "payments") return <PaymentsPage />;
+
     // Regular page routing
     switch (activeView) {
-      case 'marketplace':
+      case "marketplace":
         return <MarketplacePage />;
-      case 'farmers':
+      case "farmers":
         return <FarmersPage onNavigate={handleNavigate} />;
-      case 'transport':
+      case "transport":
         return <TransportPage onOpenAuth={handleOpenAuth} />;
       default:
-        return <HomePage onOpenAuth={handleOpenAuth} onNavigate={handleNavigate} />;
+        return (
+          <HomePage onOpenAuth={handleOpenAuth} onNavigate={handleNavigate} />
+        );
     }
   };
 
@@ -210,7 +235,7 @@ const AppContent: React.FC = () => {
         title={getAuthModalTitle()}
         size="lg"
       >
-        {authModalType === 'farmer' && (
+        {authModalType === "farmer" && (
           <FarmerRegistration
             onSuccess={handleAuthSuccess}
             onCancel={() => {
@@ -220,7 +245,7 @@ const AppContent: React.FC = () => {
             onSwitchToLogin={handleSwitchToLogin}
           />
         )}
-        {authModalType === 'market' && (
+        {authModalType === "market" && (
           <MarketRegistration
             onSuccess={handleAuthSuccess}
             onCancel={() => {
@@ -230,7 +255,7 @@ const AppContent: React.FC = () => {
             onSwitchToLogin={handleSwitchToLogin}
           />
         )}
-        {authModalType === 'transporter' && (
+        {authModalType === "transporter" && (
           <TransporterRegistration
             onSuccess={handleAuthSuccess}
             onCancel={() => {

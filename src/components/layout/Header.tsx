@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { useApp } from '@/context/AppContext';
-import logo from '../../assets/logo.png';
+import React, { useState } from "react";
+import { useApp } from "@/context/AppContext";
+import logo from "../../assets/logo.png";
 import {
   CartIcon,
   UserIcon,
@@ -12,16 +12,22 @@ import {
   WheatIcon,
   LogOutIcon,
   ChevronDownIcon,
-} from '@/components/icons/Icons';
+  DollarIcon,
+} from "@/components/icons/Icons";
 
 interface HeaderProps {
   onOpenCart: () => void;
-  onOpenAuth: (type: 'farmer' | 'market' | 'transporter') => void;
+  onOpenAuth: (type: "farmer" | "market" | "transporter") => void;
   onOpenLogin: () => void;
   onNavigate: (view: string) => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onOpenCart, onOpenAuth, onOpenLogin, onNavigate }) => {
+export const Header: React.FC<HeaderProps> = ({
+  onOpenCart,
+  onOpenAuth,
+  onOpenLogin,
+  onNavigate,
+}) => {
   const { cart, currentUser, userRole, logout, activeView } = useApp();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
@@ -31,22 +37,22 @@ export const Header: React.FC<HeaderProps> = ({ onOpenCart, onOpenAuth, onOpenLo
   const handleLogout = async () => {
     await logout();
     setIsUserMenuOpen(false);
-    onNavigate('home');
+    onNavigate("home");
   };
 
   const getUserName = () => {
-    if (!currentUser) return '';
-    if ('name' in currentUser) return currentUser.name;
-    if ('business_name' in currentUser) return currentUser.business_name;
-    if ('company_name' in currentUser) return currentUser.company_name;
-    return 'User';
+    if (!currentUser) return "";
+    if ("name" in currentUser) return currentUser.name;
+    if ("business_name" in currentUser) return currentUser.business_name;
+    if ("company_name" in currentUser) return currentUser.company_name;
+    return "User";
   };
 
   const navItems = [
-    { id: 'home', label: 'Home', icon: HomeIcon },
-    { id: 'marketplace', label: 'Marketplace', icon: StoreIcon },
-    { id: 'farmers', label: 'Farmers', icon: WheatIcon },
-    { id: 'transport', label: 'Transport', icon: TruckIcon },
+    { id: "home", label: "Home", icon: HomeIcon },
+    { id: "marketplace", label: "Marketplace", icon: StoreIcon },
+    { id: "farmers", label: "Farmers", icon: WheatIcon },
+    { id: "transport", label: "Transport", icon: TruckIcon },
   ];
 
   return (
@@ -56,7 +62,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenCart, onOpenAuth, onOpenLo
           {/* Logo */}
           <div
             className="flex items-center gap-2 cursor-pointer"
-            onClick={() => onNavigate('home')}
+            onClick={() => onNavigate("home")}
           >
             <img
               src={logo}
@@ -73,8 +79,8 @@ export const Header: React.FC<HeaderProps> = ({ onOpenCart, onOpenAuth, onOpenLo
                 onClick={() => onNavigate(item.id)}
                 className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                   activeView === item.id
-                    ? 'bg-green-50 text-green-700'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    ? "bg-green-50 text-green-700"
+                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                 }`}
               >
                 {item.label}
@@ -85,7 +91,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenCart, onOpenAuth, onOpenLo
           {/* Right Section */}
           <div className="flex items-center gap-3">
             {/* Cart Button (for markets) */}
-            {userRole === 'market' && (
+            {userRole === "market" && (
               <button
                 onClick={onOpenCart}
                 className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
@@ -93,7 +99,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenCart, onOpenAuth, onOpenLo
                 <CartIcon size={24} />
                 {cartItemCount > 0 && (
                   <span className="absolute -top-1 -right-1 w-5 h-5 bg-green-600 text-white text-xs font-bold rounded-full flex items-center justify-center">
-                    {cartItemCount > 9 ? '9+' : cartItemCount}
+                    {cartItemCount > 9 ? "9+" : cartItemCount}
                   </span>
                 )}
               </button>
@@ -108,11 +114,11 @@ export const Header: React.FC<HeaderProps> = ({ onOpenCart, onOpenAuth, onOpenLo
                 >
                   <div
                     className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                      userRole === 'farmer'
-                        ? 'bg-green-600'
-                        : userRole === 'market'
-                        ? 'bg-blue-600'
-                        : 'bg-orange-500'
+                      userRole === "farmer"
+                        ? "bg-green-600"
+                        : userRole === "market"
+                          ? "bg-blue-600"
+                          : "bg-orange-500"
                     }`}
                   >
                     <UserIcon className="text-white" size={18} />
@@ -122,7 +128,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenCart, onOpenAuth, onOpenLo
                   </span>
                   <ChevronDownIcon
                     className={`text-gray-400 transition-transform ${
-                      isUserMenuOpen ? 'rotate-180' : ''
+                      isUserMenuOpen ? "rotate-180" : ""
                     }`}
                     size={18}
                   />
@@ -136,12 +142,16 @@ export const Header: React.FC<HeaderProps> = ({ onOpenCart, onOpenAuth, onOpenLo
                     />
                     <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-50">
                       <div className="px-4 py-2 border-b border-gray-100">
-                        <p className="font-medium text-gray-900">{getUserName()}</p>
-                        <p className="text-sm text-gray-500 capitalize">{userRole}</p>
+                        <p className="font-medium text-gray-900">
+                          {getUserName()}
+                        </p>
+                        <p className="text-sm text-gray-500 capitalize">
+                          {userRole}
+                        </p>
                       </div>
                       <button
                         onClick={() => {
-                          onNavigate('dashboard');
+                          onNavigate("dashboard");
                           setIsUserMenuOpen(false);
                         }}
                         className="w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-50 flex items-center gap-2"
@@ -149,6 +159,83 @@ export const Header: React.FC<HeaderProps> = ({ onOpenCart, onOpenAuth, onOpenLo
                         <HomeIcon size={18} />
                         Dashboard
                       </button>
+
+                      {/* Role-specific Orders Link */}
+                      {userRole === "market" && (
+                        <>
+                          <button
+                            onClick={() => {
+                              onNavigate("orders-market");
+                              setIsUserMenuOpen(false);
+                            }}
+                            className="w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                          >
+                            <StoreIcon size={18} />
+                            Orders
+                          </button>
+                          <button
+                            onClick={() => {
+                              onNavigate("payments");
+                              setIsUserMenuOpen(false);
+                            }}
+                            className="w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                          >
+                            <DollarIcon size={18} />
+                            Payments
+                          </button>
+                        </>
+                      )}
+
+                      {userRole === "farmer" && (
+                        <>
+                          <button
+                            onClick={() => {
+                              onNavigate("orders-farmer");
+                              setIsUserMenuOpen(false);
+                            }}
+                            className="w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                          >
+                            <WheatIcon size={18} />
+                            Orders
+                          </button>
+                          <button
+                            onClick={() => {
+                              onNavigate("payments");
+                              setIsUserMenuOpen(false);
+                            }}
+                            className="w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                          >
+                            <DollarIcon size={18} />
+                            Payments
+                          </button>
+                        </>
+                      )}
+
+                      {userRole === "transporter" && (
+                        <>
+                          <button
+                            onClick={() => {
+                              onNavigate("orders-transporter");
+                              setIsUserMenuOpen(false);
+                            }}
+                            className="w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                          >
+                            <TruckIcon size={18} />
+                            Deliveries
+                          </button>
+                          <button
+                            onClick={() => {
+                              onNavigate("payments");
+                              setIsUserMenuOpen(false);
+                            }}
+                            className="w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                          >
+                            <DollarIcon size={18} />
+                            Payments
+                          </button>
+                        </>
+                      )}
+
                       <button
                         onClick={handleLogout}
                         className="w-full px-4 py-2 text-left text-red-600 hover:bg-red-50 flex items-center gap-2"
@@ -169,7 +256,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenCart, onOpenAuth, onOpenLo
                   Sign In
                 </button>
                 <button
-                  onClick={() => onOpenAuth('market')}
+                  onClick={() => onOpenAuth("market")}
                   className="px-4 py-2 bg-green-600 text-white hover:bg-green-700 rounded-lg font-medium transition-colors"
                 >
                   Get Started
@@ -200,8 +287,8 @@ export const Header: React.FC<HeaderProps> = ({ onOpenCart, onOpenAuth, onOpenLo
                   }}
                   className={`w-full px-4 py-3 rounded-lg font-medium flex items-center gap-3 transition-colors ${
                     activeView === item.id
-                      ? 'bg-green-50 text-green-700'
-                      : 'text-gray-600 hover:bg-gray-50'
+                      ? "bg-green-50 text-green-700"
+                      : "text-gray-600 hover:bg-gray-50"
                   }`}
                 >
                   <item.icon size={20} />
@@ -222,7 +309,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenCart, onOpenAuth, onOpenLo
                 </button>
                 <button
                   onClick={() => {
-                    onOpenAuth('farmer');
+                    onOpenAuth("farmer");
                     setIsMobileMenuOpen(false);
                   }}
                   className="w-full px-4 py-3 text-green-700 bg-green-50 rounded-lg font-medium"
@@ -231,7 +318,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenCart, onOpenAuth, onOpenLo
                 </button>
                 <button
                   onClick={() => {
-                    onOpenAuth('market');
+                    onOpenAuth("market");
                     setIsMobileMenuOpen(false);
                   }}
                   className="w-full px-4 py-3 bg-green-600 text-white rounded-lg font-medium"
@@ -240,7 +327,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenCart, onOpenAuth, onOpenLo
                 </button>
                 <button
                   onClick={() => {
-                    onOpenAuth('transporter');
+                    onOpenAuth("transporter");
                     setIsMobileMenuOpen(false);
                   }}
                   className="w-full px-4 py-3 bg-orange-500 text-white rounded-lg font-medium"

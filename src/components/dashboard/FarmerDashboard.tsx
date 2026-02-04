@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import { useApp } from '@/context/AppContext';
-import { Farmer, ProduceListing } from '@/types';
-import { supabase } from '@/lib/supabase';
-import { toast } from '@/components/ui/use-toast';
+import React, { useEffect, useState } from "react";
+import { useApp } from "@/context/AppContext";
+import { Farmer, ProduceListing } from "@/types";
+import { supabase } from "@/lib/supabase";
+import { toast } from "@/components/ui/use-toast";
 import {
   PackageIcon,
   DollarIcon,
@@ -12,7 +12,8 @@ import {
   MapPinIcon,
   CheckIcon,
   ClockIcon,
-} from '@/components/icons/Icons';
+} from "@/components/icons/Icons";
+import { getEarningsForRecipient, getPaymentsByFarmer } from "@/lib/payments";
 
 interface ProduceFormValues {
   name: string;
@@ -25,32 +26,34 @@ interface ProduceFormValues {
 }
 
 const CATEGORY_OPTIONS = [
-  { id: 'crops', label: 'Crops' },
-  { id: 'livestock', label: 'Livestock' },
-  { id: 'dairy', label: 'Dairy' },
-  { id: 'vegetables', label: 'Vegetables' },
-  { id: 'fruits', label: 'Fruits' },
-  { id: 'flowers', label: 'Flowers' },
+  { id: "crops", label: "Crops" },
+  { id: "livestock", label: "Livestock" },
+  { id: "dairy", label: "Dairy" },
+  { id: "vegetables", label: "Vegetables" },
+  { id: "fruits", label: "Fruits" },
+  { id: "flowers", label: "Flowers" },
 ];
 
-const UNIT_OPTIONS = ['kg', 'ton', 'liter', 'crate', 'dozen', 'bag', 'unit'];
+const UNIT_OPTIONS = ["kg", "ton", "liter", "crate", "dozen", "bag", "unit"];
 
 export const FarmerDashboard: React.FC = () => {
   const { currentUser } = useApp();
   const farmer = currentUser as Farmer;
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState("overview");
   const [listings, setListings] = useState<ProduceListing[]>([]);
   const [isLoadingListings, setIsLoadingListings] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [editingListing, setEditingListing] = useState<ProduceListing | null>(null);
+  const [editingListing, setEditingListing] = useState<ProduceListing | null>(
+    null,
+  );
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [formValues, setFormValues] = useState<ProduceFormValues>({
-    name: '',
-    categoryId: '',
-    pricePerUnit: '',
-    quantityAvailable: '',
-    unit: '',
-    description: '',
+    name: "",
+    categoryId: "",
+    pricePerUnit: "",
+    quantityAvailable: "",
+    unit: "",
+    description: "",
     isOrganic: false,
   });
 
@@ -61,15 +64,15 @@ export const FarmerDashboard: React.FC = () => {
       setIsLoadingListings(true);
       try {
         const { data, error } = await supabase
-          .from('produce_listings')
-          .select('*')
-          .eq('farmer_id', farmer.id)
-          .order('created_at', { ascending: false });
+          .from("produce_listings")
+          .select("*")
+          .eq("farmer_id", farmer.id)
+          .order("created_at", { ascending: false });
 
         if (error) {
-          console.error('Error loading produce listings:', error);
+          console.error("Error loading produce listings:", error);
           toast({
-            title: 'Error loading listings',
+            title: "Error loading listings",
             description: error.message,
           });
           return;
@@ -86,12 +89,12 @@ export const FarmerDashboard: React.FC = () => {
 
   const resetForm = () => {
     setFormValues({
-      name: '',
-      categoryId: '',
-      pricePerUnit: '',
-      quantityAvailable: '',
-      unit: '',
-      description: '',
+      name: "",
+      categoryId: "",
+      pricePerUnit: "",
+      quantityAvailable: "",
+      unit: "",
+      description: "",
       isOrganic: false,
     });
     setImageFile(null);
@@ -99,7 +102,9 @@ export const FarmerDashboard: React.FC = () => {
   };
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
   ) => {
     const { name, value } = e.target;
     setFormValues((prev) => ({ ...prev, [name]: value }));
@@ -116,21 +121,21 @@ export const FarmerDashboard: React.FC = () => {
   };
 
   const handleEditListing = (listing: ProduceListing) => {
-    setActiveTab('listings');
+    setActiveTab("listings");
     setEditingListing(listing);
     setFormValues({
-      name: listing.name || '',
-      categoryId: listing.category_id || '',
+      name: listing.name || "",
+      categoryId: listing.category_id || "",
       pricePerUnit:
-        typeof listing.price_per_unit === 'number'
+        typeof listing.price_per_unit === "number"
           ? listing.price_per_unit.toString()
-          : '',
+          : "",
       quantityAvailable:
-        typeof listing.quantity_available === 'number'
+        typeof listing.quantity_available === "number"
           ? listing.quantity_available.toString()
-          : '',
-      unit: listing.unit || '',
-      description: listing.description || '',
+          : "",
+      unit: listing.unit || "",
+      description: listing.description || "",
       isOrganic: listing.is_organic ?? false,
     });
     setImageFile(null);
@@ -138,15 +143,17 @@ export const FarmerDashboard: React.FC = () => {
 
   const handleDeleteListing = async (listing: ProduceListing) => {
     if (!farmer?.id) return;
-    const confirmed = window.confirm('Are you sure you want to delete this listing?');
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this listing?",
+    );
     if (!confirmed) return;
 
     try {
       const { error } = await supabase
-        .from('produce_listings')
+        .from("produce_listings")
         .delete()
-        .eq('id', listing.id)
-        .eq('farmer_id', farmer.id);
+        .eq("id", listing.id)
+        .eq("farmer_id", farmer.id);
 
       if (error) {
         throw error;
@@ -154,15 +161,15 @@ export const FarmerDashboard: React.FC = () => {
 
       setListings((prev) => prev.filter((item) => item.id !== listing.id));
       toast({
-        title: 'Listing deleted',
-        description: 'Your produce listing has been removed.',
+        title: "Listing deleted",
+        description: "Your produce listing has been removed.",
       });
     } catch (err) {
-      console.error('Error deleting listing:', err);
+      console.error("Error deleting listing:", err);
       toast({
-        title: 'Error deleting listing',
+        title: "Error deleting listing",
         description:
-          err instanceof Error ? err.message : 'Something went wrong.',
+          err instanceof Error ? err.message : "Something went wrong.",
       });
     }
   };
@@ -173,8 +180,8 @@ export const FarmerDashboard: React.FC = () => {
 
     if (!formValues.name || !formValues.categoryId || !formValues.unit) {
       toast({
-        title: 'Missing information',
-        description: 'Please fill in name, category, and unit.',
+        title: "Missing information",
+        description: "Please fill in name, category, and unit.",
       });
       return;
     }
@@ -184,22 +191,26 @@ export const FarmerDashboard: React.FC = () => {
       let imageUrl: string | null = editingListing?.image_url ?? null;
 
       if (imageFile) {
-        const fileExt = imageFile.name.split('.').pop() || 'jpg';
+        const fileExt = imageFile.name.split(".").pop() || "jpg";
         const fileName = `${farmer.id}/${Date.now()}.${fileExt}`;
         const { error: uploadError } = await supabase.storage
-          .from('produce-images')
+          .from("produce-images")
           .upload(fileName, imageFile, { upsert: true });
 
         if (uploadError) {
-          console.warn('Image upload failed, saving listing without image:', uploadError);
+          console.warn(
+            "Image upload failed, saving listing without image:",
+            uploadError,
+          );
           toast({
-            title: 'Listing saved without image',
-            description: 'Image upload failed. You can edit the listing later to add a photo.',
-            variant: 'default',
+            title: "Listing saved without image",
+            description:
+              "Image upload failed. You can edit the listing later to add a photo.",
+            variant: "default",
           });
         } else {
           const { data: publicUrlData } = supabase.storage
-            .from('produce-images')
+            .from("produce-images")
             .getPublicUrl(fileName);
           imageUrl = publicUrlData?.publicUrl ?? null;
         }
@@ -212,7 +223,10 @@ export const FarmerDashboard: React.FC = () => {
         category_id: formValues.categoryId,
         price_per_unit: Math.max(0, Number(formValues.pricePerUnit) || 0),
         unit: formValues.unit,
-        quantity_available: Math.max(0, Number(formValues.quantityAvailable) || 0),
+        quantity_available: Math.max(
+          0,
+          Number(formValues.quantityAvailable) || 0,
+        ),
         minimum_order: 1,
         is_organic: Boolean(formValues.isOrganic),
         is_seasonal: false,
@@ -222,18 +236,18 @@ export const FarmerDashboard: React.FC = () => {
 
       if (editingListing) {
         const { data, error } = await supabase
-          .from('produce_listings')
+          .from("produce_listings")
           .update(payload)
-          .eq('id', editingListing.id)
-          .eq('farmer_id', farmer.id)
-          .select('*')
+          .eq("id", editingListing.id)
+          .eq("farmer_id", farmer.id)
+          .select("*")
           .single();
 
         if (error) {
           toast({
-            title: 'Error updating listing',
+            title: "Error updating listing",
             description: error.message,
-            variant: 'destructive',
+            variant: "destructive",
           });
           return;
         }
@@ -245,21 +259,21 @@ export const FarmerDashboard: React.FC = () => {
         );
 
         toast({
-          title: 'Listing updated',
-          description: 'Your produce listing has been updated.',
+          title: "Listing updated",
+          description: "Your produce listing has been updated.",
         });
       } else {
         const { data, error } = await supabase
-          .from('produce_listings')
+          .from("produce_listings")
           .insert(payload)
-          .select('*')
+          .select("*")
           .single();
 
         if (error) {
           toast({
-            title: 'Error creating listing',
+            title: "Error creating listing",
             description: error.message,
-            variant: 'destructive',
+            variant: "destructive",
           });
           return;
         }
@@ -267,19 +281,22 @@ export const FarmerDashboard: React.FC = () => {
         setListings((prev) => [data as ProduceListing, ...prev]);
 
         toast({
-          title: 'Listing created',
-          description: 'Your produce listing has been created.',
+          title: "Listing created",
+          description: "Your produce listing has been created.",
         });
       }
 
       resetForm();
     } catch (err) {
-      console.error('Error saving listing:', err);
-      const message = err instanceof Error ? err.message : 'Something went wrong. Check the console for details.';
+      console.error("Error saving listing:", err);
+      const message =
+        err instanceof Error
+          ? err.message
+          : "Something went wrong. Check the console for details.";
       toast({
-        title: 'Error saving listing',
+        title: "Error saving listing",
         description: message,
-        variant: 'destructive',
+        variant: "destructive",
       });
     } finally {
       setIsSaving(false);
@@ -288,28 +305,89 @@ export const FarmerDashboard: React.FC = () => {
 
   // Sample data for the dashboard
   const stats = [
-    { label: 'Active Listings', value: '12', icon: PackageIcon, color: 'bg-green-500' },
-    { label: 'Total Revenue', value: 'USD 245,000', icon: DollarIcon, color: 'bg-blue-500' },
-    { label: 'Pending Orders', value: '5', icon: ClockIcon, color: 'bg-orange-500' },
-    { label: 'Completed Orders', value: '48', icon: CheckIcon, color: 'bg-purple-500' },
+    {
+      label: "Active Listings",
+      value: "12",
+      icon: PackageIcon,
+      color: "bg-green-500",
+    },
+    {
+      label: "Total Revenue",
+      value: "USD 245,000",
+      icon: DollarIcon,
+      color: "bg-blue-500",
+    },
+    {
+      label: "Pending Orders",
+      value: "5",
+      icon: ClockIcon,
+      color: "bg-orange-500",
+    },
+    {
+      label: "Completed Orders",
+      value: "48",
+      icon: CheckIcon,
+      color: "bg-purple-500",
+    },
   ];
 
   const recentOrders = [
-    { id: 'ORD-001', buyer: 'Fresh Foods Supermarket', items: 3, total: 15000, status: 'pending', date: '2024-01-28' },
-    { id: 'ORD-002', buyer: 'Hilton Hotel', items: 5, total: 32000, status: 'confirmed', date: '2024-01-27' },
-    { id: 'ORD-003', buyer: 'Mama Ngina School', items: 8, total: 28000, status: 'in_transit', date: '2024-01-26' },
-    { id: 'ORD-004', buyer: 'Java House', items: 2, total: 8500, status: 'delivered', date: '2024-01-25' },
+    {
+      id: "ORD-001",
+      buyer: "Fresh Foods Supermarket",
+      items: 3,
+      total: 15000,
+      status: "pending",
+      date: "2024-01-28",
+    },
+    {
+      id: "ORD-002",
+      buyer: "Hilton Hotel",
+      items: 5,
+      total: 32000,
+      status: "confirmed",
+      date: "2024-01-27",
+    },
+    {
+      id: "ORD-003",
+      buyer: "Mama Ngina School",
+      items: 8,
+      total: 28000,
+      status: "in_transit",
+      date: "2024-01-26",
+    },
+    {
+      id: "ORD-004",
+      buyer: "Java House",
+      items: 2,
+      total: 8500,
+      status: "delivered",
+      date: "2024-01-25",
+    },
   ];
 
   const getStatusBadge = (status: string) => {
     const styles: Record<string, string> = {
-      pending: 'bg-yellow-100 text-yellow-700',
-      confirmed: 'bg-blue-100 text-blue-700',
-      in_transit: 'bg-orange-100 text-orange-700',
-      delivered: 'bg-green-100 text-green-700',
+      pending: "bg-yellow-100 text-yellow-700",
+      confirmed: "bg-blue-100 text-blue-700",
+      in_transit: "bg-orange-100 text-orange-700",
+      delivered: "bg-green-100 text-green-700",
     };
-    return styles[status] || 'bg-gray-100 text-gray-700';
+    return styles[status] || "bg-gray-100 text-gray-700";
   };
+
+  const [earningsTotal, setEarningsTotal] = useState<number | null>(null);
+  const [recentPayments, setRecentPayments] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (!farmer?.id) return;
+    (async () => {
+      const { total } = await getEarningsForRecipient(farmer.id);
+      setEarningsTotal(total || 0);
+      const { data } = await getPaymentsByFarmer(farmer.id);
+      setRecentPayments((data || []).slice(0, 5));
+    })();
+  }, [farmer?.id]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -319,14 +397,14 @@ export const FarmerDashboard: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">
-                Welcome back, {farmer?.name?.split(' ')[0] || 'Farmer'}!
+                Welcome back, {farmer?.name?.split(" ")[0] || "Farmer"}!
               </h1>
               <p className="text-gray-500">{farmer?.farm_name}</p>
             </div>
             <button
               className="px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center gap-2"
               onClick={() => {
-                setActiveTab('listings');
+                setActiveTab("listings");
                 resetForm();
               }}
             >
@@ -346,12 +424,16 @@ export const FarmerDashboard: React.FC = () => {
               className="bg-white rounded-xl p-6 shadow-sm border border-gray-100"
             >
               <div className="flex items-center gap-4">
-                <div className={`w-12 h-12 ${stat.color} rounded-xl flex items-center justify-center`}>
+                <div
+                  className={`w-12 h-12 ${stat.color} rounded-xl flex items-center justify-center`}
+                >
                   <stat.icon className="text-white" size={24} />
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">{stat.label}</p>
-                  <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {stat.value}
+                  </p>
                 </div>
               </div>
             </div>
@@ -360,14 +442,14 @@ export const FarmerDashboard: React.FC = () => {
 
         {/* Tabs */}
         <div className="flex gap-1 mb-6 bg-gray-100 p-1 rounded-lg w-fit">
-          {['overview', 'listings', 'orders'].map((tab) => (
+          {["overview", "listings", "orders"].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={`px-4 py-2 rounded-lg font-medium capitalize transition-colors ${
                 activeTab === tab
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
+                  ? "bg-white text-gray-900 shadow-sm"
+                  : "text-gray-600 hover:text-gray-900"
               }`}
             >
               {tab}
@@ -376,7 +458,7 @@ export const FarmerDashboard: React.FC = () => {
         </div>
 
         {/* Overview Tab */}
-        {activeTab === 'overview' && (
+        {activeTab === "overview" && (
           <div className="grid lg:grid-cols-2 gap-6">
             {/* Recent Orders */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-100">
@@ -387,18 +469,67 @@ export const FarmerDashboard: React.FC = () => {
                 {recentOrders.map((order) => (
                   <div key={order.id} className="p-4 hover:bg-gray-50">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="font-medium text-gray-900">{order.id}</span>
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadge(order.status)}`}>
-                        {order.status.replace('_', ' ')}
+                      <span className="font-medium text-gray-900">
+                        {order.id}
+                      </span>
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadge(order.status)}`}
+                      >
+                        {order.status.replace("_", " ")}
                       </span>
                     </div>
                     <p className="text-sm text-gray-600 mb-1">{order.buyer}</p>
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-gray-500">{order.items} items</span>
-                      <span className="font-medium text-green-600">USD {order.total.toLocaleString()}</span>
+                      <span className="font-medium text-green-600">
+                        USD {order.total.toLocaleString()}
+                      </span>
                     </div>
                   </div>
                 ))}
+              </div>
+            </div>
+
+            {/* Earnings Card */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-4">
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <h2 className="font-semibold text-gray-900">Earnings</h2>
+                  <p className="text-sm text-gray-500">
+                    Recent payouts and balance
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm text-gray-500">Total</p>
+                  <p className="text-2xl font-bold text-green-600">
+                    Ksh {earningsTotal?.toFixed(2) ?? "0.00"}
+                  </p>
+                </div>
+              </div>
+              <div className="divide-y">
+                {recentPayments.length === 0 ? (
+                  <div className="py-3 text-sm text-gray-500">
+                    No payouts yet.
+                  </div>
+                ) : (
+                  recentPayments.map((p) => (
+                    <div
+                      key={p.id}
+                      className="py-2 flex items-center justify-between text-sm"
+                    >
+                      <div>
+                        <div className="font-medium">
+                          Ksh {p.amount?.toFixed(2)}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {p.method} •{" "}
+                          {new Date(p.created_at).toLocaleDateString()}
+                        </div>
+                      </div>
+                      <div className="text-xs text-gray-500">{p.status}</div>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
 
@@ -408,11 +539,15 @@ export const FarmerDashboard: React.FC = () => {
               <div className="space-y-4">
                 <div className="flex items-center gap-3">
                   <MapPinIcon className="text-gray-400" size={20} />
-                  <span className="text-gray-600">{farmer?.location_address || 'Location not set'}</span>
+                  <span className="text-gray-600">
+                    {farmer?.location_address || "Location not set"}
+                  </span>
                 </div>
                 <div className="flex items-center gap-3">
                   <PackageIcon className="text-gray-400" size={20} />
-                  <span className="text-gray-600">{farmer?.farm_size || 'Size not specified'}</span>
+                  <span className="text-gray-600">
+                    {farmer?.farm_size || "Size not specified"}
+                  </span>
                 </div>
                 {farmer?.certifications && farmer.certifications.length > 0 && (
                   <div>
@@ -440,12 +575,12 @@ export const FarmerDashboard: React.FC = () => {
         )}
 
         {/* Listings Tab */}
-        {activeTab === 'listings' && (
+        {activeTab === "listings" && (
           <div className="grid lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1.9fr)] gap-6">
             {/* Listing Form */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
               <h2 className="font-semibold text-gray-900 mb-4">
-                {editingListing ? 'Edit Listing' : 'Add New Listing'}
+                {editingListing ? "Edit Listing" : "Add New Listing"}
               </h2>
               <form className="space-y-4" onSubmit={handleSubmit}>
                 <div>
@@ -598,7 +733,7 @@ export const FarmerDashboard: React.FC = () => {
                         Saving...
                       </>
                     ) : editingListing ? (
-                      'Save Changes'
+                      "Save Changes"
                     ) : (
                       <>
                         <PlusIcon size={16} />
@@ -643,7 +778,7 @@ export const FarmerDashboard: React.FC = () => {
                       <img
                         src={
                           listing.image_url ||
-                          'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=400'
+                          "https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=400"
                         }
                         alt={listing.name}
                         className="w-full h-40 object-cover"
@@ -656,18 +791,19 @@ export const FarmerDashboard: React.FC = () => {
                           <span
                             className={`text-xs px-2 py-1 rounded-full ${
                               listing.is_active
-                                ? 'bg-green-100 text-green-700'
-                                : 'bg-gray-100 text-gray-600'
+                                ? "bg-green-100 text-green-700"
+                                : "bg-gray-100 text-gray-600"
                             }`}
                           >
-                            {listing.is_active ? 'Active' : 'Inactive'}
+                            {listing.is_active ? "Active" : "Inactive"}
                           </span>
                         </div>
                         <p className="text-sm text-gray-500 mb-1">
                           {listing.quantity_available} {listing.unit} available
                         </p>
                         <p className="text-green-600 font-medium mb-3">
-                          USD {listing.price_per_unit?.toFixed(2)}/{listing.unit}
+                          USD {listing.price_per_unit?.toFixed(2)}/
+                          {listing.unit}
                         </p>
                         {listing.description && (
                           <p className="text-xs text-gray-500 mb-3 line-clamp-2">
@@ -700,29 +836,47 @@ export const FarmerDashboard: React.FC = () => {
         )}
 
         {/* Orders Tab */}
-        {activeTab === 'orders' && (
+        {activeTab === "orders" && (
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Order ID</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Buyer</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Items</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    Order ID
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    Buyer
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    Items
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    Total
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    Status
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    Date
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {recentOrders.map((order) => (
                   <tr key={order.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 font-medium text-gray-900">{order.id}</td>
+                    <td className="px-6 py-4 font-medium text-gray-900">
+                      {order.id}
+                    </td>
                     <td className="px-6 py-4 text-gray-600">{order.buyer}</td>
                     <td className="px-6 py-4 text-gray-600">{order.items}</td>
-                    <td className="px-6 py-4 font-medium text-green-600">USD {order.total.toLocaleString()}</td>
+                    <td className="px-6 py-4 font-medium text-green-600">
+                      USD {order.total.toLocaleString()}
+                    </td>
                     <td className="px-6 py-4">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadge(order.status)}`}>
-                        {order.status.replace('_', ' ')}
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadge(order.status)}`}
+                      >
+                        {order.status.replace("_", " ")}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-gray-500">{order.date}</td>

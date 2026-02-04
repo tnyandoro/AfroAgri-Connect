@@ -1,30 +1,46 @@
-import React, { useState, useEffect } from 'react';
-import { useApp } from '@/context/AppContext';
-import { supabase } from '@/lib/supabase';
-import { Transporter, TransportQuote, Market } from '@/types';
-import { TransportQuoteCard } from '@/components/transport/TransportQuoteCard';
-import { MapPinIcon, CalendarIcon, ClockIcon, CheckIcon } from '@/components/icons/Icons';
+import React, { useState, useEffect } from "react";
+import { useApp } from "@/context/AppContext";
+import { supabase } from "@/lib/supabase";
+import { Transporter, TransportQuote, Market } from "@/types";
+import { TransportQuoteCard } from "@/components/transport/TransportQuoteCard";
+import {
+  MapPinIcon,
+  CalendarIcon,
+  ClockIcon,
+  CheckIcon,
+} from "@/components/icons/Icons";
+import { createOrder, updateOrderStatus } from "@/lib/orders";
+import {
+  createPaymentForOrder,
+  processPayment,
+  createStripeCheckoutSession,
+} from "@/lib/payments";
 
 interface CheckoutFlowProps {
   onComplete: () => void;
   onBack: () => void;
 }
 
-export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ onComplete, onBack }) => {
+export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
+  onComplete,
+  onBack,
+}) => {
   const { cart, cartTotal, currentUser, clearCart, userRole } = useApp();
   const [step, setStep] = useState(1);
   const [transporters, setTransporters] = useState<Transporter[]>([]);
   const [quotes, setQuotes] = useState<TransportQuote[]>([]);
-  const [selectedQuote, setSelectedQuote] = useState<TransportQuote | null>(null);
+  const [selectedQuote, setSelectedQuote] = useState<TransportQuote | null>(
+    null,
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
 
   const [deliveryDetails, setDeliveryDetails] = useState({
-    delivery_address: (currentUser as Market)?.location_address || '',
-    delivery_date: '',
-    delivery_time: 'Morning (6am-10am)',
-    notes: '',
+    delivery_address: (currentUser as Market)?.location_address || "",
+    delivery_date: "",
+    delivery_time: "Morning (6am-10am)",
+    notes: "",
   });
 
   // Simulated distance (in real app, would use Maps API)
@@ -32,8 +48,8 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ onComplete, onBack }
 
   const needsRefrigeration = cart.some(
     (item) =>
-      item.produce.category?.name === 'Dairy' ||
-      item.produce.category?.name === 'Livestock'
+      item.produce.category?.name === "Dairy" ||
+      item.produce.category?.name === "Livestock",
   );
 
   useEffect(() => {
@@ -44,24 +60,24 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ onComplete, onBack }
     setIsLoading(true);
     try {
       const { data, error } = await supabase
-        .from('transporters')
-        .select('*')
-        .eq('is_available', true);
+        .from("transporters")
+        .select("*")
+        .eq("is_available", true);
 
       if (error) throw error;
       setTransporters(data || []);
     } catch (err) {
-      console.error('Error fetching transporters:', err);
+      console.error("Error fetching transporters:", err);
       // Use sample data if no transporters in DB
       setTransporters([
         {
-          id: '1',
-          company_name: 'FastHaul Logistics',
-          owner_name: 'David Otieno',
-          email: 'david@fasthaul.com',
-          phone: '+254 756 789 012',
-          vehicle_type: 'Refrigerated Truck',
-          vehicle_capacity: '5 tons',
+          id: "1",
+          company_name: "FastHaul Logistics",
+          owner_name: "David Otieno",
+          email: "david@fasthaul.com",
+          phone: "+254 756 789 012",
+          vehicle_type: "Refrigerated Truck",
+          vehicle_capacity: "5 tons",
           has_refrigeration: true,
           base_rate: 80,
           per_km_rate: 3.5,
@@ -71,13 +87,13 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ onComplete, onBack }
           total_deliveries: 342,
         },
         {
-          id: '2',
-          company_name: 'AgriMove Transport',
-          owner_name: 'James Mutua',
-          email: 'james@agrimove.com',
-          phone: '+254 767 890 123',
-          vehicle_type: 'Covered Truck',
-          vehicle_capacity: '8 tons',
+          id: "2",
+          company_name: "AgriMove Transport",
+          owner_name: "James Mutua",
+          email: "james@agrimove.com",
+          phone: "+254 767 890 123",
+          vehicle_type: "Covered Truck",
+          vehicle_capacity: "8 tons",
           has_refrigeration: false,
           base_rate: 60,
           per_km_rate: 2.8,
@@ -87,13 +103,13 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ onComplete, onBack }
           total_deliveries: 521,
         },
         {
-          id: '3',
-          company_name: 'QuickFarm Delivery',
-          owner_name: 'Mary Njeri',
-          email: 'mary@quickfarm.com',
-          phone: '+254 778 901 234',
-          vehicle_type: 'Small Van',
-          vehicle_capacity: '1.5 tons',
+          id: "3",
+          company_name: "QuickFarm Delivery",
+          owner_name: "Mary Njeri",
+          email: "mary@quickfarm.com",
+          phone: "+254 778 901 234",
+          vehicle_type: "Small Van",
+          vehicle_capacity: "1.5 tons",
           has_refrigeration: true,
           base_rate: 40,
           per_km_rate: 2.0,
@@ -121,7 +137,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ onComplete, onBack }
 
         // Estimate time based on distance (avg 40km/h in traffic)
         const hours = Math.ceil(distance / 40);
-        const estimated_time = hours <= 1 ? '~1 hour' : `~${hours} hours`;
+        const estimated_time = hours <= 1 ? "~1 hour" : `~${hours} hours`;
 
         return {
           transporter,
@@ -152,9 +168,91 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ onComplete, onBack }
 
     setIsSubmitting(true);
     try {
-      // In a real app, this would create the order in the database
-      // For now, we'll simulate success
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      // Build order payload
+      const items = cart.map((i) => ({
+        produce_id: i.produce.id,
+        quantity: i.quantity,
+        unit_price: i.produce.price_per_unit,
+      }));
+
+      const orderTotal = cartTotal + selectedQuote.total_cost;
+
+      // create order in DB
+      const { data: newOrder, error: orderError } = await createOrder({
+        market_id: (currentUser as any)?.id,
+        farmer_id: cart[0]?.produce?.farmer_id || "",
+        items,
+        total_amount: orderTotal,
+        transport_cost: selectedQuote.total_cost,
+        distance_km: selectedQuote.distance_km,
+        delivery_address: deliveryDetails.delivery_address,
+        delivery_date: deliveryDetails.delivery_date,
+        delivery_time: deliveryDetails.delivery_time,
+        notes: deliveryDetails.notes,
+      });
+
+      if (orderError || !newOrder) {
+        console.error("Failed to create order:", orderError);
+        setIsSubmitting(false);
+        return;
+      }
+
+      // create payment record
+      const { data: payment, error: paymentError } =
+        await createPaymentForOrder(
+          newOrder.id,
+          (currentUser as any)?.id,
+          newOrder.farmer_id,
+          selectedQuote.transporter.id,
+          orderTotal,
+          "card",
+        );
+
+      if (paymentError || !payment) {
+        console.error("Failed to create payment:", paymentError);
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Prefer server-side Stripe Checkout if available — create a session and redirect.
+      try {
+        const stripeResp = await createStripeCheckoutSession(
+          newOrder.id,
+          orderTotal,
+        );
+        if (stripeResp?.url) {
+          // Redirect to Stripe hosted checkout
+          window.location.href = stripeResp.url;
+          return; // user will return via success_url webhook or by listing
+        }
+      } catch (e) {
+        console.warn(
+          "Stripe checkout creation failed or not configured, falling back to simulated payment",
+          e,
+        );
+      }
+
+      // Fallback: simulate processing payment immediately for now
+      const { data: processed, error: procErr } = await processPayment(
+        payment.id,
+      );
+      if (procErr || !processed) {
+        console.warn("Payment failed or pending:", procErr);
+        // still show order placed but with unpaid status
+        setOrderSuccess(true);
+        setTimeout(() => {
+          clearCart();
+          onComplete();
+        }, 2000);
+        return;
+      }
+
+      // On successful payment, mark order as confirmed
+      await updateOrderStatus(
+        newOrder.id,
+        "confirmed",
+        (currentUser as any)?.id,
+      );
 
       setOrderSuccess(true);
       setTimeout(() => {
@@ -162,23 +260,23 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ onComplete, onBack }
         onComplete();
       }, 2000);
     } catch (err) {
-      console.error('Error submitting order:', err);
+      console.error("Error submitting order:", err);
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const deliveryTimeOptions = [
-    'Morning (6am-10am)',
-    'Midday (10am-2pm)',
-    'Afternoon (2pm-6pm)',
-    'Evening (6pm-9pm)',
+    "Morning (6am-10am)",
+    "Midday (10am-2pm)",
+    "Afternoon (2pm-6pm)",
+    "Evening (6pm-9pm)",
   ];
 
   // Get tomorrow's date as minimum
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
-  const minDate = tomorrow.toISOString().split('T')[0];
+  const minDate = tomorrow.toISOString().split("T")[0];
 
   if (orderSuccess) {
     return (
@@ -186,9 +284,12 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ onComplete, onBack }
         <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
           <CheckIcon className="text-green-600" size={40} />
         </div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Order Placed Successfully!</h2>
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">
+          Order Placed Successfully!
+        </h2>
         <p className="text-gray-600 mb-4">
-          Your order has been sent to the farmer. You'll receive a confirmation shortly.
+          Your order has been sent to the farmer. You'll receive a confirmation
+          shortly.
         </p>
         <p className="text-sm text-gray-500">
           Transport: {selectedQuote?.transporter.company_name}
@@ -206,8 +307,8 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ onComplete, onBack }
             <div
               className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold transition-all ${
                 step >= s
-                  ? 'bg-green-600 text-white'
-                  : 'bg-gray-200 text-gray-500'
+                  ? "bg-green-600 text-white"
+                  : "bg-gray-200 text-gray-500"
               }`}
             >
               {step > s ? <CheckIcon size={20} /> : s}
@@ -215,7 +316,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ onComplete, onBack }
             {s < 3 && (
               <div
                 className={`w-16 h-1 mx-2 rounded ${
-                  step > s ? 'bg-green-600' : 'bg-gray-200'
+                  step > s ? "bg-green-600" : "bg-gray-200"
                 }`}
               />
             )}
@@ -329,7 +430,10 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ onComplete, onBack }
             <textarea
               value={deliveryDetails.notes}
               onChange={(e) =>
-                setDeliveryDetails((prev) => ({ ...prev, notes: e.target.value }))
+                setDeliveryDetails((prev) => ({
+                  ...prev,
+                  notes: e.target.value,
+                }))
               }
               rows={3}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
@@ -347,7 +451,8 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ onComplete, onBack }
           </h3>
           {needsRefrigeration && (
             <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700 mb-4">
-              Your order contains perishable items. Only refrigerated transport options are shown.
+              Your order contains perishable items. Only refrigerated transport
+              options are shown.
             </div>
           )}
           {isLoading ? (
@@ -357,7 +462,9 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ onComplete, onBack }
             </div>
           ) : quotes.length === 0 ? (
             <div className="text-center py-8">
-              <p className="text-gray-500">No transporters available at the moment.</p>
+              <p className="text-gray-500">
+                No transporters available at the moment.
+              </p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -365,7 +472,9 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ onComplete, onBack }
                 <TransportQuoteCard
                   key={quote.transporter.id}
                   quote={quote}
-                  isSelected={selectedQuote?.transporter.id === quote.transporter.id}
+                  isSelected={
+                    selectedQuote?.transporter.id === quote.transporter.id
+                  }
                   onSelect={() => setSelectedQuote(quote)}
                 />
               ))}
@@ -394,7 +503,8 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ onComplete, onBack }
                     {item.produce.name} x {item.quantity} {item.produce.unit}
                   </span>
                   <span className="font-medium">
-                    USD {(item.produce.price_per_unit * item.quantity).toFixed(2)}
+                    USD{" "}
+                    {(item.produce.price_per_unit * item.quantity).toFixed(2)}
                   </span>
                 </div>
               ))}
@@ -407,22 +517,29 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ onComplete, onBack }
             <div className="space-y-2 text-sm">
               <div className="flex items-start gap-2">
                 <MapPinIcon className="text-gray-400 mt-0.5" size={16} />
-                <span className="text-gray-600">{deliveryDetails.delivery_address}</span>
+                <span className="text-gray-600">
+                  {deliveryDetails.delivery_address}
+                </span>
               </div>
               <div className="flex items-center gap-2">
                 <CalendarIcon className="text-gray-400" size={16} />
                 <span className="text-gray-600">
-                  {new Date(deliveryDetails.delivery_date).toLocaleDateString('en-US', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                  })}
+                  {new Date(deliveryDetails.delivery_date).toLocaleDateString(
+                    "en-US",
+                    {
+                      weekday: "long",
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    },
+                  )}
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 <ClockIcon className="text-gray-400" size={16} />
-                <span className="text-gray-600">{deliveryDetails.delivery_time}</span>
+                <span className="text-gray-600">
+                  {deliveryDetails.delivery_time}
+                </span>
               </div>
             </div>
           </div>
@@ -432,9 +549,12 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ onComplete, onBack }
             <h4 className="font-medium text-gray-900 mb-3">Transport</h4>
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-medium">{selectedQuote.transporter.company_name}</p>
+                <p className="font-medium">
+                  {selectedQuote.transporter.company_name}
+                </p>
                 <p className="text-sm text-gray-500">
-                  {selectedQuote.transporter.vehicle_type} • {selectedQuote.distance_km}km
+                  {selectedQuote.transporter.vehicle_type} •{" "}
+                  {selectedQuote.distance_km}km
                 </p>
               </div>
               <p className="text-lg font-bold text-orange-600">
@@ -470,7 +590,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ onComplete, onBack }
           onClick={step === 1 ? onBack : () => setStep(step - 1)}
           className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors"
         >
-          {step === 1 ? 'Back to Cart' : 'Back'}
+          {step === 1 ? "Back to Cart" : "Back"}
         </button>
         {step < 3 ? (
           <button
@@ -478,7 +598,8 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ onComplete, onBack }
             onClick={() => setStep(step + 1)}
             disabled={
               step === 1
-                ? !deliveryDetails.delivery_address || !deliveryDetails.delivery_date
+                ? !deliveryDetails.delivery_address ||
+                  !deliveryDetails.delivery_date
                 : !selectedQuote
             }
             className="flex-1 px-6 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
@@ -492,7 +613,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ onComplete, onBack }
             disabled={isSubmitting}
             className="flex-1 px-6 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
           >
-            {isSubmitting ? 'Placing Order...' : 'Place Order'}
+            {isSubmitting ? "Placing Order..." : "Place Order"}
           </button>
         )}
       </div>

@@ -86,12 +86,32 @@ export interface ProduceListing {
   category?: ProduceCategory;
 }
 
+export interface OrderStatusEntry {
+  status:
+    | "pending"
+    | "confirmed"
+    | "picked_up"
+    | "in_transit"
+    | "delivered"
+    | "cancelled";
+  timestamp: string; // ISO string
+  actor_id?: string; // user who performed the update (farmer/transporter/market)
+  note?: string;
+}
+
 export interface Order {
   id: string;
   market_id: string;
   farmer_id: string;
   transporter_id?: string;
-  status: 'pending' | 'confirmed' | 'in_transit' | 'delivered' | 'cancelled';
+  status:
+    | "pending"
+    | "confirmed"
+    | "picked_up"
+    | "in_transit"
+    | "delivered"
+    | "cancelled";
+  status_history?: OrderStatusEntry[];
   total_amount: number;
   transport_cost?: number;
   delivery_date?: string;
@@ -121,7 +141,7 @@ export interface CartItem {
   quantity: number;
 }
 
-export type UserRole = 'farmer' | 'market' | 'transporter' | null;
+export type UserRole = "farmer" | "market" | "transporter" | null;
 
 export interface TransportQuote {
   transporter: Transporter;
@@ -131,4 +151,39 @@ export interface TransportQuote {
   refrigeration_cost: number;
   total_cost: number;
   estimated_time: string;
+}
+
+// Payments and invoices
+export type PaymentStatus = "unpaid" | "paid" | "failed" | "payout";
+
+export interface Payment {
+  id: string;
+  order_id: string;
+  market_id?: string;
+  farmer_id?: string;
+  transporter_id?: string;
+  amount: number;
+  currency?: string;
+  method?: string; // e.g., 'card', 'mobile_money', 'bank'
+  status: PaymentStatus;
+  created_at?: string;
+  paid_at?: string | null;
+  metadata?: Record<string, unknown>;
+}
+
+export interface Invoice {
+  id: string;
+  payment_id: string;
+  invoice_number: string;
+  issued_at: string;
+  url?: string; // optional link to a generated PDF
+}
+
+export interface EarningEntry {
+  id: string;
+  recipient_id: string; // farmer or transporter id
+  order_id: string;
+  amount: number;
+  currency?: string;
+  created_at?: string;
 }
